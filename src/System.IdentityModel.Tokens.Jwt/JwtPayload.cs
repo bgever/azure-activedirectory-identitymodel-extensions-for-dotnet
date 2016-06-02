@@ -314,9 +314,11 @@ namespace System.IdentityModel.Tokens.Jwt
                 // there is some code redundancy here that was not factored as this is a high use method. Each identity received from the host will pass through here.
                 foreach (KeyValuePair<string, object> keyValuePair in this)
                 {
-                    // do not add claims with null value
                     if (keyValuePair.Value == null)
+                    {
+                        claims.Add(new Claim(keyValuePair.Key, string.Empty, JsonClaimValueTypes.JsonNull, issuer, issuer));
                         continue;
+                    }
 
                     var claimValue = keyValuePair.Value as string;
                     if (claimValue != null)
@@ -539,6 +541,9 @@ namespace System.IdentityModel.Tokens.Jwt
 
         internal static string GetClaimValueType(object obj)
         {
+            if (obj == null)
+                return JsonClaimValueTypes.JsonNull;
+
             var objType = obj.GetType();
 
             if (objType == typeof(string))

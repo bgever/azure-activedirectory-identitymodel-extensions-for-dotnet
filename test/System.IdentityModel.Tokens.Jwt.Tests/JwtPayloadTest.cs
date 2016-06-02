@@ -135,12 +135,31 @@ namespace System.IdentityModel.Tokens.Jwt.Tests
             TestUtilities.AssertFailIfErrors(GetType().ToString() + ".Claims", context.Diffs);
         }
 
-        [Fact]
-        public void TestClaimWithNullValue()
+#pragma warning disable CS3016 // Arrays as attribute arguments is not CLS-compliant
+        [Theory, MemberData("NullClaimDataSet")]
+#pragma warning restore CS3016 // Arrays as attribute arguments is not CLS-compliant        
+        public void TestClaimWithNullValue(JwtPayload payload, string expectedClaimType)
         {
-            JwtPayload jwtPayload = new JwtPayload();
-            jwtPayload.Add("testClaim", null);
-            List<Claim> claims = jwtPayload.Claims as List<Claim>;   // this should not throw
+            foreach (Claim claim in payload.Claims)
+            {
+                if (claim.Type == expectedClaimType)
+                {
+                    Console.WriteLine(claim.Type + " " + claim.Value + " " + claim.ValueType);
+                    return;
+                }
+            }
+            Assert.True(false, string.Format("Claim with expected type: {0} is not found", expectedClaimType));
+        }
+
+        public static TheoryData<JwtPayload, string> NullClaimDataSet()
+        {
+            var dataSet = new TheoryData<JwtPayload, string>();
+            JwtPayload payload = new JwtPayload();
+            payload.Add("nullClaim", null);
+            payload.Add("jsonNullClaim", @"[""status"",""feed"", null]");
+            dataSet.Add(payload, "nullClaim");
+            dataSet.Add(payload, "jsonNullClaim");
+            return dataSet;
         }
 
 #pragma warning disable CS3016 // Arrays as attribute arguments is not CLS-compliant
